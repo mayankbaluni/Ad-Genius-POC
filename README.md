@@ -17,7 +17,7 @@ This project is a standard React application built with Vite.
 
 You must have a Google Gemini API key to run this application.
 
-1.  Get your API key from [Google AI Studio](https://makersuite.google.com/app/apikey).
+1.  Get your API key from Google gemini  
 2.  Create a file named `.env` in the root of the project.
 3.  Add your API key to the `.env` file:
 
