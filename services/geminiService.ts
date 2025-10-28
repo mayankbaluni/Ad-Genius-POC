@@ -2,11 +2,29 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import type { Product, AdCopy, AdContent } from '../types';
 
-if (!process.env.API_KEY) {
-  throw new Error("API_KEY environment variable is not set.");
+let ai: GoogleGenAI | null = null;
+
+// Lazily initialize the AI client to avoid crashing the app on startup
+// if the API key is not set.
+function getGoogleAI(): GoogleGenAI {
+  const apiKey = import.meta.env.VITE_API_KEY;
+
+  if (!apiKey) {
+    // Remind the user to set the API key, but don't crash the app.
+    // The error will be caught and displayed in the UI when they try to generate content.
+    throw new Error("VITE_API_KEY environment variable not set. Please create a .env file and add it.");
+  }
+
+  if (!ai) {
+    // IMPORTANT: Storing the API key in client-side code is insecure and should
+    // be avoided in a production environment. For this proof-of-concept, we're
+    // using Vite's environment variables, but a server-side proxy would be
+    // the recommended approach.
+    ai = new GoogleGenAI({ apiKey });
+  }
+  return ai;
 }
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 const adCopySchema = {
   type: Type.OBJECT,
@@ -51,7 +69,8 @@ async function generateAdCopyAndImagePrompt(product: Product): Promise<{ copy: A
     The tone should be enthusiastic but trustworthy.
   `;
 
-  const response = await ai.models.generateContent({
+  const aiClient = getGoogleAI();
+  const response = await aiClient.models.generateContent({
     model: "gemini-2.5-flash",
     contents: prompt,
     config: {
@@ -73,7 +92,8 @@ async function generateAdCopyAndImagePrompt(product: Product): Promise<{ copy: A
 }
 
 async function generateAdImage(prompt: string): Promise<string> {
-    const response = await ai.models.generateImages({
+    const aiClient = getGoogleAI();
+    const response = await aiClient.models.generateImages({
         model: 'imagen-4.0-generate-001',
         prompt: prompt,
         config: {
